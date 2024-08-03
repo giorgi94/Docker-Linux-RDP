@@ -7,7 +7,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Update and install necessary packages
 RUN apt-get update && apt-get upgrade -y
 RUN apt-get install -y xorg dbus-x11 x11-xserver-utils xrdp openssh-server
-RUN apt-get install -y wget curl vim htop
+RUN apt-get install -y wget curl vim htop sudo ncdu
 RUN apt-get install -y xfce4 xfce4-goodies xfce4-whiskermenu-plugin
 
 # Clean Up cache
@@ -33,6 +33,8 @@ COPY init.sh /root/system_init.sh
 
 # Create user
 RUN useradd -m -s /bin/bash abc && echo "abc:abc" | chpasswd
+
+RUN usermod -aG sudo abc
 
 # Start XRDP and the XFCE desktop
 CMD ["/bin/bash", "/root/system_init.sh"]

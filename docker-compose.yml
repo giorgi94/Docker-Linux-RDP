@@ -1,6 +1,6 @@
 services:
     rdesktop:
-        image: xrdp-xfce-debian:12
+        image: giok94/linux-rdp:debian-12
         build:
             context: .
         container_name: rdesktop
