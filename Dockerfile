@@ -37,5 +37,5 @@ RUN useradd -m -s /bin/bash abc && echo "abc:abc" | chpasswd
 RUN usermod -aG sudo abc
 
 # Start XRDP and the XFCE desktop
-CMD ["/bin/bash", "/root/system_init.sh"]
+ENTRYPOINT  ["/root/system_init.sh"]
 
