@@ -1,41 +1,87 @@
-# Use Debian 12 as the base image
-FROM debian:12
+FROM debian:13.4
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Update and install necessary packages
-RUN apt-get update && apt-get upgrade -y
-RUN apt-get install -y xorg dbus-x11 x11-xserver-utils xrdp openssh-server
-RUN apt-get install -y wget curl vim htop sudo ncdu
-RUN apt-get install -y xfce4 xfce4-goodies xfce4-whiskermenu-plugin
+# Update and install all packages in a single layer so apt-get clean
+# actually reduces image size
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        xorg \
+        dbus-x11 \
+        x11-xserver-utils \
+        xrdp \
+        openssh-server \
+        wget \
+        curl \
+        vim \
+        htop \
+        sudo \
+        ncdu \
+        # KDE Plasma desktop
+        kde-plasma-desktop \
+        plasma-workspace \
+        kde-standard \
+        sddm \
+        # Useful KDE extras (trim as desired)
+        konsole \
+        dolphin \
+        kate \
+        ark \
+        # Needed for clean KDE session under XRDP
+        dbus \
+        dbus-user-session \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# Clean Up cache
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+# ------------------------------------------------------------------
+# XRDP – configure to launch a KDE Plasma session
+# ------------------------------------------------------------------
+RUN adduser xrdp ssl-cert
 
-# Set up XRDP
-RUN adduser xrdp ssl-cert && \
-    echo "startxfce4" > /etc/skel/.xsession && \
-    echo "startxfce4" > /root/.xsession && \
-    sed -i 's/3389/3389/g' /etc/xrdp/xrdp.ini && \
-    echo "xfce4-session" > /etc/xrdp/startwm.sh && \
+# Write a proper startwm.sh with shebang so XRDP can execute it
+RUN printf '#!/bin/sh\nexec startplasma-x11\n' > /etc/xrdp/startwm.sh && \
     chmod +x /etc/xrdp/startwm.sh
 
-# Set up SSH server
-RUN mkdir /var/run/sshd && \
-    sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config && \
-    sed -i 's/PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+# Provide a fallback .xsession for non-XRDP X logins (root not used
+# for login, but keeps the skeleton tidy for new users)
+RUN echo "exec startplasma-x11" > /etc/skel/.xsession
 
-# Open port for XRDP and SSH server
+# ------------------------------------------------------------------
+# SSH server – harden defaults
+# ------------------------------------------------------------------
+RUN mkdir -p /run/sshd && \
+    sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config && \
+    sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+
+# ------------------------------------------------------------------
+# Unprivileged user
+# Pass USER_PASSWORD at build time: --build-arg USER_PASSWORD=secret
+# Falls back to a placeholder that forces a password change on first login.
+# ------------------------------------------------------------------
+ARG USER_PASSWORD=abc
+RUN useradd -m -s /bin/bash abc && \
+    echo "abc:${USER_PASSWORD}" | chpasswd && \
+    usermod -aG sudo abc && \
+    # Give the user a KDE session file for XRDP
+    echo "exec startplasma-x11" > /home/abc/.xsession && \
+    chown abc:abc /home/abc/.xsession
+
+# ------------------------------------------------------------------
+# Ports
+# ------------------------------------------------------------------
 EXPOSE 3389 22
 
+# ------------------------------------------------------------------
+# Health check – verify XRDP is accepting connections
+# ------------------------------------------------------------------
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+    CMD bash -c 'cat /dev/null > /dev/tcp/localhost/3389' || exit 1
+
+# ------------------------------------------------------------------
+# Entrypoint
+# ------------------------------------------------------------------
 COPY init.sh /root/system_init.sh
+RUN chmod +x /root/system_init.sh
 
-# Create user
-RUN useradd -m -s /bin/bash abc && echo "abc:abc" | chpasswd
-
-RUN usermod -aG sudo abc
-
-# Start XRDP and the XFCE desktop
-ENTRYPOINT  ["/root/system_init.sh"]
-
+ENTRYPOINT ["/root/system_init.sh"]

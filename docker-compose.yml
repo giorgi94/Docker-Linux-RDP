@@ -3,10 +3,10 @@ services:
         image: giok94/linux-rdp:debian-12
         build:
             context: .
+            args:
+                USER_PASSWORD: ${RDP_PASSWORD:-changeme}
         container_name: rdesktop
         environment:
-            - PUID=1000
-            - PGID=1000
             - TZ=Asia/Tbilisi
         volumes:
             - ./config:/config

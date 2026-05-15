@@ -6,3 +6,6 @@ __pycache__
 *.swp
 *.local
 .DS_Store
+
+
+.env
