@@ -1,18 +1,20 @@
 services:
     rdesktop:
-        image: giok94/linux-rdp:debian-12
+        image: giok94/linux-rdp:debian-13.4
         build:
             context: .
-            args:
-                USER_PASSWORD: ${RDP_PASSWORD:-changeme}
         container_name: rdesktop
         environment:
             - TZ=Asia/Tbilisi
+            - USERNAME=abc
+            - USER_PASSWORD=abc
         volumes:
             - ./config:/config
             - ./app:/app
+            - ./init.sh:/root/system_init.sh
         ports:
-            - 3390:3389
-            - 2222:22
+            # - 3390:3389
+            # - 2222:22
+            - 6080:6080
         shm_size: "1gb"
         restart: unless-stopped
