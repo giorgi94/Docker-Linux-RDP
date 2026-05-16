@@ -1,6 +1,6 @@
 services:
     rdesktop:
-        image: giok94/linux-rdp:debian-13.4
+        image: giok94/linux-rdp:debian-13.4-vnc
         build:
             context: .
         container_name: rdesktop
