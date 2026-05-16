@@ -1,0 +1,15 @@
+services:
+    rdesktop:
+        image: giok94/linux-rdp:workscape-vnc
+        build:
+            context: .
+        container_name: rdesktop
+        environment:
+            - TZ=Asia/Tbilisi
+        volumes:
+            - ./config:/config
+            - ./app:/app
+        ports:
+            - 6080:6080
+        shm_size: "1gb"
+        restart: unless-stopped
