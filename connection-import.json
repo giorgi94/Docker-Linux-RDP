@@ -1,0 +1,15 @@
+[
+    {
+        "name": "Desktop",
+        "protocol": "rdp",
+        "parameters": {
+            "hostname": "desktop",
+            "port": "3389",
+            "username": "abc",
+            "password": "abc",
+            "security": "any",
+            "ignore-cert": "true"
+        },
+        "attributes": {}
+    }
+]

@@ -14,10 +14,9 @@ ENV DEBIAN_FRONTEND=noninteractive \
 RUN apt-get update && apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
         dbus-x11 x11-xserver-utils \
-        xrdp tigervnc-standalone-server tigervnc-tools \
+        xrdp xorgxrdp \
         xfce4 xfce4-goodies xfce4-whiskermenu-plugin \
         wget curl vim htop sudo ncdu \
-        novnc websockify \
         locales \
         dos2unix && \
     sed -i 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
@@ -31,12 +30,6 @@ RUN adduser xrdp ssl-cert && \
     echo "xfce4-session" > /etc/xrdp/startwm.sh && \
     chmod +x /etc/xrdp/startwm.sh
 
-
-# ── VNC password setup ────────────────────────────────────────
-RUN mkdir -p /root/.config/tigervnc && \
-    echo "password" | tigervncpasswd -f > /root/.config/tigervnc/passwd && \
-    chmod 600 /root/.config/tigervnc/passwd
-
 # ── SSH server setup ──────────────────────────────────────────
 # RUN mkdir -p /var/run/sshd && \
 #     sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config && \
@@ -48,7 +41,8 @@ RUN useradd -m -s /bin/bash ${USERNAME} && \
     usermod -aG sudo ${USERNAME}
 
 # ── Entrypoint ────────────────────────────────────────────────
-EXPOSE 3389 22 6080
+# RDP port — only accessed internally by guacd, not exposed to the host
+EXPOSE 3389
 COPY --chmod=755 init.sh /root/system_init.sh
 RUN dos2unix /root/system_init.sh
 ENTRYPOINT ["/root/system_init.sh"]

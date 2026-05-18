@@ -1,9 +1,9 @@
 services:
-    rdesktop:
-        image: giok94/linux-rdp:debian-13.4-vnc
+    desktop:
+        image: giok94/linux-desktop:debian-13.4-guacamole
         build:
             context: .
-        container_name: rdesktop
+        container_name: desktop
         environment:
             - TZ=Asia/Tbilisi
             - USERNAME=abc
@@ -12,9 +12,44 @@ services:
             - ./config:/config
             - ./app:/app
             - ./init.sh:/root/system_init.sh
-        ports:
-            # - 3390:3389
-            # - 2222:22
-            - 6080:6080
+        # VNC port is internal only — guacd reaches it via Docker network
         shm_size: "1gb"
         restart: unless-stopped
+
+    guacd:
+        image: guacamole/guacd
+        container_name: guacd
+        restart: unless-stopped
+
+    guacamole-db:
+        image: postgres:15-alpine
+        container_name: guacamole-db
+        environment:
+            - POSTGRES_DB=guacamole_db
+            - POSTGRES_USER=guacamole_user
+            - POSTGRES_PASSWORD=guacamole_password
+        volumes:
+            - guacamole-db-data:/var/lib/postgresql/data
+            - ./postgres-init:/docker-entrypoint-initdb.d:ro
+        restart: unless-stopped
+
+    guacamole:
+        image: guacamole/guacamole
+        container_name: guacamole
+        environment:
+            - GUACD_HOSTNAME=guacd
+            - GUACD_PORT=4822
+            - POSTGRESQL_HOSTNAME=guacamole-db
+            - POSTGRESQL_PORT=5432
+            - POSTGRESQL_DATABASE=guacamole_db
+            - POSTGRESQL_USERNAME=guacamole_user
+            - POSTGRESQL_PASSWORD=guacamole_password
+        ports:
+            - 8080:8080
+        depends_on:
+            - guacd
+            - guacamole-db
+        restart: unless-stopped
+
+volumes:
+    guacamole-db-data:
