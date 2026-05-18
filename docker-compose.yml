@@ -11,35 +11,21 @@ services:
         volumes:
             - ./config:/config
             - ./app:/app
-            - ./init.sh:/root/system_init.sh
-        # VNC port is internal only — guacd reaches it via Docker network
         shm_size: "1gb"
         restart: unless-stopped
 
     guacd:
-        image: guacamole/guacd
+        image: guacamole/guacd:1.6.0
         container_name: guacd
         restart: unless-stopped
 
-    guacamole-db:
-        image: postgres:15-alpine
-        container_name: guacamole-db
-        environment:
-            - POSTGRES_DB=guacamole_db
-            - POSTGRES_USER=guacamole_user
-            - POSTGRES_PASSWORD=guacamole_password
-        volumes:
-            - guacamole-db-data:/var/lib/postgresql/data
-            - ./postgres-init:/docker-entrypoint-initdb.d:ro
-        restart: unless-stopped
-
     guacamole:
-        image: guacamole/guacamole
+        image: guacamole/guacamole:1.6.0
         container_name: guacamole
         environment:
             - GUACD_HOSTNAME=guacd
             - GUACD_PORT=4822
-            - POSTGRESQL_HOSTNAME=guacamole-db
+            - POSTGRESQL_HOSTNAME=host.docker.internal
             - POSTGRESQL_PORT=5432
             - POSTGRESQL_DATABASE=guacamole_db
             - POSTGRESQL_USERNAME=guacamole_user
@@ -48,8 +34,5 @@ services:
             - 8080:8080
         depends_on:
             - guacd
-            - guacamole-db
         restart: unless-stopped
 
-volumes:
-    guacamole-db-data:

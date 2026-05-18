@@ -30,11 +30,6 @@ RUN adduser xrdp ssl-cert && \
     echo "xfce4-session" > /etc/xrdp/startwm.sh && \
     chmod +x /etc/xrdp/startwm.sh
 
-# ── SSH server setup ──────────────────────────────────────────
-# RUN mkdir -p /var/run/sshd && \
-#     sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config && \
-#     sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
-
 # ── User setup ────────────────────────────────────────────────
 RUN useradd -m -s /bin/bash ${USERNAME} && \
     echo "${USERNAME}:${USER_PASSWORD}" | chpasswd && \

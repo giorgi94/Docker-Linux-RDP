@@ -7,3 +7,8 @@ In a container is created custom user abc:abc, but you can change its password b
 ```sh
 docker exec -it container_name passwd abc
 ```
+
+Guacamole web login (to access the browser UI):
+
+Username: guacadmin
+Password: guacadmin
