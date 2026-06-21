@@ -31,7 +31,7 @@ services:
             - POSTGRESQL_USERNAME=guacamole_user
             - POSTGRESQL_PASSWORD=guacamole_password
         ports:
-            - 8080:8080
+            - 9050:8080
         depends_on:
             - guacd
         restart: unless-stopped
